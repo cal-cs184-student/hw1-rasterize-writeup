@@ -370,7 +370,154 @@
 				uniform color.
 			</p>
 			<h2>Task 6: "Level Sampling" with mipmaps for texture mapping</h2>
-			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+			<p>
+				Level sampling chooses an appropriate mipmap resolution based on the
+				size of a screen sample's footprint in texture space. When a large
+				region of the original texture maps onto a small number of screen
+				pixels, sampling only the full-resolution texture can skip many texels
+				and create aliasing. A lower-resolution mipmap level contains a
+				prefiltered version of the texture and produces a more stable result.
+			</p>
+
+			<p>
+				In my textured-triangle rasterizer, I calculated the interpolated texture
+				coordinates at the current sample position, one screen pixel to the
+				right, and one screen pixel downward. These values were stored in
+				<code>p_uv</code>, <code>p_dx_uv</code>, and <code>p_dy_uv</code>.
+				I used their differences to estimate how quickly the texture coordinates
+				change across one screen pixel.
+			</p>
+
+			<p>
+				I scaled the horizontal texture-coordinate differences by the texture
+				width and the vertical differences by the texture height. I then selected
+				the larger of the two derivative magnitudes and calculated the mipmap
+				level using:
+			</p>
+
+			<p>
+				\[
+				D =
+				\log_2\left(
+				\max\left(
+				\sqrt{(W\,du/dx)^2 + (H\,dv/dx)^2},
+				\sqrt{(W\,du/dy)^2 + (H\,dv/dy)^2}
+				\right)
+				\right)
+				\]
+			</p>
+
+			<p>
+				I clamped the resulting level to the range of available mipmap levels.
+				For <code>L_ZERO</code>, I always sampled level zero. For
+				<code>L_NEAREST</code>, I rounded the calculated level to the nearest
+				integer. For <code>L_LINEAR</code>, I sampled the two surrounding
+				mipmap levels and interpolated between their colors. Combining
+				<code>L_LINEAR</code> with bilinear pixel sampling produces trilinear
+				filtering.
+			</p>
+
+			<h3>Sampling Comparisons</h3>
+
+			<p>
+				I used the same custom PNG, viewpoint, zoom level, sample rate, and pixel
+				inspector position for all four comparisons. This isolates the effects
+				of the pixel- and level-sampling methods.
+			</p>
+
+			<div style="display: flex; flex-direction: column; align-items: center;">
+				<table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+						<td style="text-align: center; padding: 10px;">
+							<img src="assets/task6-lzero-nearest.png"
+									 alt="Level zero with nearest pixel sampling"
+									 style="width: 100%;" />
+							<figcaption>
+								L_ZERO and P_NEAREST
+							</figcaption>
+						</td>
+
+						<td style="text-align: center; padding: 10px;">
+							<img src="assets/task6-lzero-linear.png"
+									 alt="Level zero with bilinear pixel sampling"
+									 style="width: 100%;" />
+							<figcaption>
+								L_ZERO and P_LINEAR
+							</figcaption>
+						</td>
+					</tr>
+
+					<tr>
+						<td style="text-align: center; padding: 10px;">
+							<img src="assets/task6-lnearest-nearest.png"
+									 alt="Nearest level with nearest pixel sampling"
+									 style="width: 100%;" />
+							<figcaption>
+								L_NEAREST and P_NEAREST
+							</figcaption>
+						</td>
+
+						<td style="text-align: center; padding: 10px;">
+							<img src="assets/task6-lnearest-linear.png"
+									 alt="Nearest level with bilinear pixel sampling"
+									 style="width: 100%;" />
+							<figcaption>
+								L_NEAREST and P_LINEAR
+							</figcaption>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<h3>Comparison of Results</h3>
+
+			<p>
+				The <code>L_ZERO</code> and <code>P_NEAREST</code> result contains the
+				most abrupt color changes because it selects one texel from the original
+				full-resolution image. Switching to <code>P_LINEAR</code> smooths the
+				transitions between nearby texels, but it can still show minification
+				aliasing because it only combines four texels from level zero.
+			</p>
+
+			<p>
+				With <code>L_NEAREST</code>, the renderer chooses a prefiltered mipmap
+				level whose resolution better matches the texture footprint of a screen
+				pixel. This reduces high-frequency aliasing and unstable details when the
+				texture is minified. Combining <code>L_NEAREST</code> with
+				<code>P_LINEAR</code> additionally blends neighboring texels within the
+				selected mipmap level, producing the smoothest result among these four
+				configurations.
+			</p>
+
+			<h3>Speed, Memory, and Antialiasing Tradeoffs</h3>
+
+			<p>
+				Nearest pixel sampling is the fastest pixel-sampling method because it
+				requires one texel lookup. Bilinear sampling requires four texel lookups
+				and interpolation, making it slower but more effective at smoothing
+				blocky transitions during texture magnification.
+			</p>
+
+			<p>
+				Level-zero sampling avoids the cost of calculating and selecting a mipmap
+				level, but it can alias badly when a high-resolution texture is displayed
+				at a small size. Nearest-level sampling adds derivative calculations and
+				requires storing a mipmap pyramid, but it greatly improves texture
+				minification. Linear-level sampling is more expensive because it samples
+				two mipmap levels and interpolates between them. A complete mipmap chain
+				also requires approximately one-third more texture memory than the
+				original image alone.
+			</p>
+
+			<p>
+				Supersampling reduces aliasing by evaluating multiple sample locations
+				inside each output pixel. It works on triangle edges as well as textured
+				interiors, but both its running time and sample-buffer memory usage grow
+				with the sample rate. In comparison, mipmapping is more specialized and
+				memory-efficient for texture minification, while supersampling provides
+				more general antialiasing at a higher computational cost.
+			</p>
 
 			<h2>(Optional) Task 7: Extra Credit - Draw Something Creative!</h2>
 			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
