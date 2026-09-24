@@ -70,30 +70,30 @@
 				</figcaption>
 			</figure>
 			<!--<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
-		<div style="display: flex; flex-direction: column; align-items: center;">
-			<table style="width: 100%; text-align: center; border-collapse: collapse;">
-				<tr>
-				<td style="text-align: center;">
-					<img src="assets/lion.jpg" width="400px"/>
-					<figcaption>Caption goes here.</figcaption>
-				</td>
-				<td style="text-align: center;">
-					<img src="assets/lion.jpg" width="400px"/>
-					<figcaption>Caption goes here.</figcaption>
-				</td>
-				</tr>
-				<tr>
-				<td style="text-align: center;">
-					<img src="assets/lion.jpg" width="400px"/>
-					<figcaption>Caption goes here.</figcaption>
-				</td>
-				<td style="text-align: center;">
-					<img src="assets/lion.jpg" width="400px"/>
-					<figcaption>Caption goes here.</figcaption>
-				</td>
-				</tr>
-			</table>
-		</div>-->
+	<div style="display: flex; flex-direction: column; align-items: center;">
+		<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			<tr>
+			<td style="text-align: center;">
+				<img src="assets/lion.jpg" width="400px"/>
+				<figcaption>Caption goes here.</figcaption>
+			</td>
+			<td style="text-align: center;">
+				<img src="assets/lion.jpg" width="400px"/>
+				<figcaption>Caption goes here.</figcaption>
+			</td>
+			</tr>
+			<tr>
+			<td style="text-align: center;">
+				<img src="assets/lion.jpg" width="400px"/>
+				<figcaption>Caption goes here.</figcaption>
+			</td>
+			<td style="text-align: center;">
+				<img src="assets/lion.jpg" width="400px"/>
+				<figcaption>Caption goes here.</figcaption>
+			</td>
+			</tr>
+		</table>
+	</div>-->
 
 			<h2>Task 2: Antialiasing by Supersampling</h2>
 			<h3>Algorithm and Data Structure</h3>
@@ -177,10 +177,90 @@
 				and averaged.
 			</p>
 			<h2>Task 3: Transforms</h2>
-			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+			<p>
+				I implemented translation, scaling, and rotation using 3-by-3
+				homogeneous transformation matrices. Translation stores the x- and
+				y-offsets in the final column, scaling places the horizontal and
+				vertical scale factors along the diagonal, and rotation uses the sine
+				and cosine of the input angle. I converted the rotation angle from
+				degrees to radians before passing it to the C++ trigonometric functions.
+			</p>
+			<h3>Custom Robot</h3>
+
+			<p>
+				I modified Cubeman to create a green robot waving with its right arm.
+				I rotated the complete right-arm hierarchy upward around the shoulder,
+				then applied another rotation to the forearm around the elbow. Because
+				the hand is nested inside the forearm group, it follows both the shoulder
+				and elbow transformations. I also rotated the left arm downward, tilted
+				the head, changed the body from red to green, and added a yellow hand to
+				make the waving gesture more visible.
+			</p>
+			<figure>
+				<img src="assets/task3-my-robot.png"
+						 alt="Green Cubeman waving with his right arm"
+						 style="width: 70%;" />
+				<figcaption>
+					My modified Cubeman uses hierarchical transformations to raise and
+					bend the right arm while positioning the left arm downward.
+				</figcaption>
+			</figure>
+
+			<p>
+				<a href="./my_robot.svg">View my_robot.svg</a>
+			</p>
 
 			<h2>Task 4: Barycentric coordinates</h2>
-			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+			<p>
+				Barycentric coordinates describe the location of a point inside a
+				triangle using three weights, \(\alpha\), \(\beta\), and \(\gamma\).
+				Each weight represents how much influence one vertex has on the point,
+				and the three weights satisfy:
+			</p>
+
+			<p>
+				\[
+				\alpha + \beta + \gamma = 1
+				\]
+			</p>
+
+			<p>
+				At the first vertex, the barycentric coordinates are \((1, 0, 0)\).
+				At the second vertex, they are \((0, 1, 0)\), and at the third vertex,
+				they are \((0, 0, 1)\). Inside the triangle, the weights smoothly vary
+				between these values.
+			</p>
+
+			<p>
+				I calculated each weight using a ratio between a smaller signed
+				triangle area and the signed area of the complete triangle. I then
+				used the barycentric weights to interpolate the vertex colors:
+			</p>
+
+			<p>
+				\[
+				C = \alpha C_0 + \beta C_1 + \gamma C_2
+				\]
+			</p>
+
+			<p>
+				For each sample inside the triangle, I applied this equation separately
+				to the red, green, and blue color components. A sample close to one
+				vertex receives more of that vertex's color, while a sample near the
+				center receives a mixture of all three colors. This produces a smooth
+				gradient across the triangle.
+			</p>
+
+			<figure>
+				<img src="assets/task4-test7.png"
+						 alt="Color wheel rendered using barycentric color interpolation"
+						 style="width:70%" />
+				<figcaption>
+					The color wheel from basic/test7.svg rendered with the default
+					view and a sample rate of 1. Its smooth gradients are produced by
+					barycentric interpolation of the triangle vertex colors.
+				</figcaption>
+			</figure>
 
 			<h2>Task 5: "Pixel sampling" for texture mapping</h2>
 			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
