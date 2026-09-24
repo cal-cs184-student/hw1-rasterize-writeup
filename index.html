@@ -48,28 +48,28 @@
 
 			<h2>Task 1: Drawing Single-Color Triangles</h2>
 			<h3>Implementation</h3>
-				<p>I rasterized each triangle by first computing an axis-aligned bounding box from the minimum and maximum x and y coordinates of its three vertices. I clipped the bounding box to the framebuffer boundaries and iterated only over the pixels within that region. </p>
-				<p>For each pixel, I tested the sample at the center of the pixel, <code>(x+0.5, y+0.5)</code>. I used a signed edge function on each of the triangle's three edges to determine which side of each edge contained the sample. The smaple was considered inside the triangle when all three edge-function values were non-negative or when all three were non-positive.</p>
-				<p>
-					Checking both sign directions allows the algorithm to rasterize triangles
-					with either clockwise or counterclockwise vertex ordering. I used
-					inclusive comparisons, <code>&gt;=</code> and <code>&lt;=</code>, so a
-					sample directly on a triangle boundary is also included. If the sample
-					passed the three edge tests, I called <code>fill_pixel()</code> using the
-					pixel coordinates and the triangle's color.
-				</p>
+			<p>I rasterized each triangle by first computing an axis-aligned bounding box from the minimum and maximum x and y coordinates of its three vertices. I clipped the bounding box to the framebuffer boundaries and iterated only over the pixels within that region. </p>
+			<p>For each pixel, I tested the sample at the center of the pixel, <code>(x+0.5, y+0.5)</code>. I used a signed edge function on each of the triangle's three edges to determine which side of each edge contained the sample. The smaple was considered inside the triangle when all three edge-function values were non-negative or when all three were non-positive.</p>
+			<p>
+				Checking both sign directions allows the algorithm to rasterize triangles
+				with either clockwise or counterclockwise vertex ordering. I used
+				inclusive comparisons, <code>&gt;=</code> and <code>&lt;=</code>, so a
+				sample directly on a triangle boundary is also included. If the sample
+				passed the three edge tests, I called <code>fill_pixel()</code> using the
+				pixel coordinates and the triangle's color.
+			</p>
 			<h3>Efficiency</h3>
-				<p>The algorithm does not iterate over entire frame buffer. It examines only the samples inside the triangle's boudning box. If the bounding box has width \(B_w\) and height \(B_h\), the algorithm performs \(B_w B_h\) point-in-triangle tests. Each test uses three constant-time edge-function calculations, so the total running time is \(O(B_w B_h)\). Therefore, the algorithm is no worse than an algorithm that checks every sample within the triangle's bounding box.</p>
+			<p>The algorithm does not iterate over entire frame buffer. It examines only the samples inside the triangle's boudning box. If the bounding box has width \(B_w\) and height \(B_h\), the algorithm performs \(B_w B_h\) point-in-triangle tests. Each test uses three constant-time edge-function calculations, so the total running time is \(O(B_w B_h)\). Therefore, the algorithm is no worse than an algorithm that checks every sample within the triangle's bounding box.</p>
 			<h3>Result</h3>
-				<figure>
-					<img src="assets/task1-test4.png" alt="basic test4 rendered with pixel inspecture centered on a triangle edge" style="width:50%"/>
-					<figcaption>
-						basic/test4.svg rendered with the default viewing parameters. The
-						pixel inspector is centered on a diagonal triangle boundary, showing
-						which pixels were filled based on samples taken at their centers.
-					</figcaption>
-				</figure>
-	<!--<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
+			<figure>
+				<img src="assets/task1-test4.png" alt="basic test4 rendered with pixel inspecture centered on a triangle edge" style="width:50%" />
+				<figcaption>
+					basic/test4.svg rendered with the default viewing parameters. The
+					pixel inspector is centered on a diagonal triangle boundary, showing
+					which pixels were filled based on samples taken at their centers.
+				</figcaption>
+			</figure>
+			<!--<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 				<tr>
@@ -96,8 +96,86 @@
 		</div>-->
 
 			<h2>Task 2: Antialiasing by Supersampling</h2>
-			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+			<h3>Algorithm and Data Structure</h3>
 
+			<p>
+				I implemented supersampling by storing multiple color samples for every
+				output pixel. The sample buffer contains
+				<code>width * height * sample_rate</code> Color objects, with the
+				subsamples for each pixel stored contiguously. For a sample rate of
+				\(r\), I used a \(\sqrt{r} \times \sqrt{r}\) uniform grid inside each
+				pixel.
+			</p>
+
+			<p>
+				During triangle rasterization, I performed the edge tests independently
+				at every subpixel location. Covered subsamples received the triangle
+				color, while uncovered subsamples retained the color already in the
+				sample buffer. After all primitives were rasterized, I resolved the
+				sample buffer by averaging the subsample colors belonging to each pixel
+				and writing the result into the RGB framebuffer.
+			</p>
+
+			<h3>Rasterization Pipeline Changes</h3>
+
+			<p>
+				I resized the sample buffer whenever the framebuffer dimensions or
+				sample rate changed. I modified <code>fill_pixel()</code> to fill every
+				subsample of a pixel so that points and lines would continue to render
+				correctly. Triangles instead write to individual subsamples.
+				Finally, I updated <code>resolve_to_framebuffer()</code> to average the
+				subsamples and convert their floating-point color components into
+				8-bit RGB values.
+			</p>
+
+			<h3>Why Supersampling Helps</h3>
+
+			<p>
+				With one sample per pixel, a triangle edge produces a binary decision:
+				the entire pixel is either inside or outside. This produces jagged edges
+				and can miss very thin features. Supersampling approximates the fraction
+				of each pixel covered by the triangle. Averaging the covered and
+				uncovered samples produces intermediate edge colors, making diagonal
+				edges and narrow triangle corners appear smoother.
+			</p>
+
+			<h3>Results</h3>
+
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+				<tr>
+					<td>
+						<img src="assets/task2-rate1.png"
+								 alt="test4 at sample rate 1"
+								 style="width: 95%;" />
+						<figcaption>Sample rate 1</figcaption>
+					</td>
+
+					<td>
+						<img src="assets/task2-rate4.png"
+								 alt="test4 at sample rate 4"
+								 style="width: 95%;" />
+						<figcaption>Sample rate 4</figcaption>
+					</td>
+
+					<td>
+						<img src="assets/task2-rate16.png"
+								 alt="test4 at sample rate 16"
+								 style="width: 95%;" />
+						<figcaption>Sample rate 16</figcaption>
+					</td>
+				</tr>
+			</table>
+
+			<p>
+				At sample rate 1, diagonal boundaries show abrupt stair-step patterns
+				because each pixel receives only one binary coverage decision. At sample
+				rate 4, the additional samples capture partial coverage and create
+				smoother boundary colors. At sample rate 16, the coverage estimate is
+				more precise, so the thin triangle corner and diagonal edges appear
+				smoother and more continuous. The visual improvement comes with higher
+				runtime and memory usage because more samples must be stored, tested,
+				and averaged.
+			</p>
 			<h2>Task 3: Transforms</h2>
 			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
