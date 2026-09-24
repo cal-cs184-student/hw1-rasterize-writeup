@@ -263,8 +263,112 @@
 			</figure>
 
 			<h2>Task 5: "Pixel sampling" for texture mapping</h2>
-			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+			<p>
+				Pixel sampling determines how a texture color is selected for a sample
+				on a texture-mapped triangle. For every covered sample, I first calculated
+				its barycentric coordinates. I used those coordinates to interpolate the
+				texture coordinates \(u\) and \(v\) from the texture coordinates stored at
+				the triangle's three vertices.
+			</p>
 
+			<p>
+				After obtaining the interpolated texture coordinate, I converted it from
+				the normalized range \([0,1]\) into coordinates in the full-resolution
+				texture image. For Task 5, I always sampled mipmap level zero. The selected
+				texture color was then written into the corresponding location in the
+				supersample buffer.
+			</p>
+
+			<h3>Nearest and Bilinear Sampling</h3>
+
+			<p>
+				Nearest-neighbor sampling selects the single texel whose center is closest
+				to the requested texture coordinate. It requires only one texture lookup,
+				so it is fast, but it can create blocky edges and abrupt changes between
+				neighboring texels.
+			</p>
+
+			<p>
+				Bilinear sampling uses the four texels surrounding the requested texture
+				coordinate. I first interpolated horizontally between the two texels in
+				each row and then interpolated vertically between the resulting colors.
+				This produces smoother transitions, although it requires four texture
+				lookups and additional interpolation.
+			</p>
+
+			<h3>Sampling Comparison</h3>
+
+			<div style="display: flex; flex-direction: column; align-items: center;">
+				<table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+						<td style="text-align: center; padding: 10px;">
+							<img src="assets/task5-nearest-1.png"
+									 alt="Nearest sampling with one sample per pixel"
+									 style="width: 100%;" />
+							<figcaption>
+								Nearest sampling, 1 sample per pixel
+							</figcaption>
+						</td>
+
+						<td style="text-align: center; padding: 10px;">
+							<img src="assets/task5-nearest-16.png"
+									 alt="Nearest sampling with sixteen samples per pixel"
+									 style="width: 100%;" />
+							<figcaption>
+								Nearest sampling, 16 samples per pixel
+							</figcaption>
+						</td>
+					</tr>
+
+					<tr>
+						<td style="text-align: center; padding: 10px;">
+							<img src="assets/task5-bilinear-1.png"
+									 alt="Bilinear sampling with one sample per pixel"
+									 style="width: 100%;" />
+							<figcaption>
+								Bilinear sampling, 1 sample per pixel
+							</figcaption>
+						</td>
+
+						<td style="text-align: center; padding: 10px;">
+							<img src="assets/task5-bilinear-16.png"
+									 alt="Bilinear sampling with sixteen samples per pixel"
+									 style="width: 100%;" />
+							<figcaption>
+								Bilinear sampling, 16 samples per pixel
+							</figcaption>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<h3>Comparison of Results</h3>
+
+			<p>
+				The nearest-sampled images show sharper but more abrupt transitions
+				between texels. These artifacts are especially visible around detailed
+				coastlines, thin lines, and regions viewed through the pixel inspector.
+				Bilinear sampling blends neighboring texels, so these transitions appear
+				smoother and less blocky.
+			</p>
+
+			<p>
+				Increasing the supersampling rate from 1 to 16 improves the rasterized
+				edges of the triangles because more locations are sampled within each
+				output pixel. However, supersampling and texture filtering solve different
+				problems. Supersampling primarily reduces aliasing along triangle
+				boundaries, while bilinear sampling reduces abrupt changes within the
+				texture itself.
+			</p>
+
+			<p>
+				The difference between nearest and bilinear sampling is largest when the
+				texture is magnified, when a sample falls between texel centers, or when
+				the texture contains high-frequency details such as thin lines and sharp
+				color boundaries. The difference can be less noticeable when the texture
+				is viewed near its original resolution or contains large areas of nearly
+				uniform color.
+			</p>
 			<h2>Task 6: "Level Sampling" with mipmaps for texture mapping</h2>
 			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
